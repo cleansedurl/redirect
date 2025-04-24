@@ -1,3 +1,11 @@
+from flask import Flask, request, render_template_string
+import requests
+
+app = Flask(__name__)
+
+# ... rest of the code ...
+
+
 import requests
 
 def get_final_url(url):
