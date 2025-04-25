@@ -13,13 +13,13 @@ HTML_TEMPLATE = """
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
         .container { max-width: 700px; margin: 60px auto; background: #ffffff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
         h2 { text-align: center; margin-bottom: 30px; color: #333; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
         input[type=text] {
-            width: 100%;
+            flex: 1;
             padding: 12px;
             font-size: 16px;
             border-radius: 10px;
             border: 1px solid #ccc;
-            margin-bottom: 20px;
             box-sizing: border-box;
         }
         button {
@@ -45,6 +45,13 @@ HTML_TEMPLATE = """
         .copy-btn:hover {
             background-color: #1e7e34;
         }
+        .paste-btn {
+            background-color: #ffc107;
+            color: black;
+        }
+        .paste-btn:hover {
+            background-color: #e0a800;
+        }
         .result {
             margin-top: 20px;
         }
@@ -61,7 +68,10 @@ HTML_TEMPLATE = """
     <div class="container">
         <h2>🔗 URL Redirection Checker</h2>
         <form method="POST">
-            <input type="text" name="url" placeholder="Paste URL here" required>
+            <div class="input-group">
+                <input type="text" id="url-input" name="url" placeholder="Paste URL here" required>
+                <button type="button" class="paste-btn" onclick="pasteFromClipboard()">📋 Paste</button>
+            </div>
             <button type="submit" class="check-btn">Check Redirect</button>
         </form>
 
@@ -79,6 +89,14 @@ HTML_TEMPLATE = """
             const text = document.getElementById('final-url').innerText;
             navigator.clipboard.writeText(text).then(() => {
                 alert('✅ Final URL copied to clipboard!');
+            });
+        }
+
+        function pasteFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                document.getElementById('url-input').value = text;
+            }).catch(err => {
+                alert('❌ Failed to read clipboard content.');
             });
         }
     </script>
