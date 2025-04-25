@@ -10,28 +10,66 @@ HTML_TEMPLATE = """
 <head>
     <title>URL Redirection Checker</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        input[type=text] { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 10px; }
-        button { padding: 10px 15px; font-size: 16px; background: #007BFF; color: white; border: none; border-radius: 6px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .result { margin-top: 20px; }
-        .final-url { background: #eef; padding: 10px; border-radius: 6px; word-break: break-all; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        .container { max-width: 700px; margin: 60px auto; background: #ffffff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); }
+        h2 { text-align: center; margin-bottom: 30px; color: #333; }
+        input[type=text] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .check-btn {
+            background-color: #007BFF;
+            color: white;
+        }
+        .check-btn:hover {
+            background-color: #0056b3;
+        }
+        .copy-btn {
+            background-color: #28a745;
+            color: white;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background-color: #1e7e34;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .final-url {
+            background: #eef;
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>URL Redirection Checker</h2>
+        <h2>🔗 URL Redirection Checker</h2>
         <form method="POST">
             <input type="text" name="url" placeholder="Paste URL here" required>
-            <button type="submit">Check Redirect</button>
+            <button type="submit" class="check-btn">Check Redirect</button>
         </form>
 
         {% if final_url %}
         <div class="result">
             <h4>Final Destination URL:</h4>
             <div class="final-url" id="final-url">{{ final_url }}</div>
-            <button onclick="copyToClipboard()">Copy</button>
+            <button class="copy-btn" onclick="copyToClipboard()">📋 Copy Final URL</button>
         </div>
         {% endif %}
     </div>
@@ -40,7 +78,7 @@ HTML_TEMPLATE = """
         function copyToClipboard() {
             const text = document.getElementById('final-url').innerText;
             navigator.clipboard.writeText(text).then(() => {
-                alert('Final URL copied to clipboard!');
+                alert('✅ Final URL copied to clipboard!');
             });
         }
     </script>
