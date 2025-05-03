@@ -171,7 +171,14 @@ def extract_and_replace_urls(text):
     for u in urls:
         cleaned = cleanse_and_tag(u)
         text = text.replace(u, cleaned)
-    return text
+
+    cta = (
+        "\n\n🔥 *Grab it before it’s gone!* "
+        "🛒 Follow RoarDeals for daily deals!\n"
+        "👉 Join our WhatsApp Channel now: https://whatsapp.com/channel/your-channel-id"
+    )
+
+    return text.strip() + cta
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
