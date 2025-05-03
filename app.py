@@ -165,7 +165,6 @@ def cleanse_and_tag(url_str):
             query.pop("affExtParam1", None)
             query.pop("affExtParam2", None)
             query.pop("affExtParam", None)
-            # query["affid"] = ["yourFlipkartTag"]
 
         cleaned_query = urlencode(query, doseq=True)
         cleaned_url = urlunparse(parsed._replace(query=cleaned_query))
@@ -181,9 +180,9 @@ def extract_and_replace_urls(text):
         text = text.replace(u, cleaned)
 
     cta = (
-        "\n\n\ud83d\udd25 *Grab it before it’s gone!* "
-        "\ud83d\uded2 Follow RoarDeals for daily deals!\n"
-        "\ud83d\udc49 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
+        "\n\n🔥 *Grab it before it’s gone!* "
+        "🛒 Follow RoarDeals for daily deals!\n"
+        "👉 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
     )
 
     return text.strip() + cta
