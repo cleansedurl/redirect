@@ -7,10 +7,10 @@ app = Flask(__name__)
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="en">
+<html lang=\"en\">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset=\"UTF-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
   <title>RoarDeals Redirect Cleaner</title>
   <style>
     * { box-sizing: border-box; }
@@ -96,21 +96,23 @@ HTML_TEMPLATE = """
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class=\"container\">
     <h2>RoarDeals Redirect Cleaner 🦁</h2>
-    <form method="POST">
-      <div class="button-group">
-        <button type="button" class="btn btn-secondary" onclick="pasteFromClipboard()">📋 Paste</button>
-        <button type="submit" class="btn btn-primary">🔍 Extract & Clean</button>
+    <form method=\"POST\">
+      <div class=\"button-group\">
+        <button type=\"button\" class=\"btn btn-secondary\" onclick=\"pasteFromClipboard()\">📋 Paste</button>
+        <button type=\"submit\" class=\"btn btn-primary\">🔍 Extract & Clean</button>
       </div>
-      <textarea name="message" id="urlInput" rows="4" placeholder="Paste full message here..." required>{{ original_text | default('') }}</textarea>
+      <textarea name=\"message\" id=\"urlInput\" rows=\"4\" placeholder=\"Paste full message here...\" required>{{ original_text | default('') }}</textarea>
     </form>
 
-    {% if cleaned_urls %}
-    <textarea id="result" rows="6" readonly>{{ cleaned_urls }}</textarea>
-    <button class="btn btn-primary" onclick="copyToClipboard()">✅ Copy Result</button>
-    <div id="copyMessage"></div>
+    {% if cleaned_text %}
+    <textarea id=\"result\" rows=\"8\" readonly>{{ cleaned_text }}</textarea>
+    <button class=\"btn btn-primary\" onclick=\"copyToClipboard()\">✅ Copy Result</button>
+    <div id=\"copyMessage\"></div>
     {% endif %}
+
+    <p style=\"margin-top:2em;text-align:center;font-size:0.95em;color:#555;\">🔥 Grab the best deals now! Don't miss out!<br>👉 Join our <strong>RoarDeals WhatsApp Channel</strong> for daily loot alerts! 🛍️📲</p>
   </div>
 
   <script>
@@ -162,21 +164,23 @@ def cleanse_and_tag(url_str):
         return cleaned_url
 
     except Exception as e:
-        return f"Invalid URL! ({e})"
+        return url_str  # return original if fails
 
-def extract_and_clean_urls(text):
+def extract_and_replace_urls(text):
     urls = re.findall(r'https?://\S+', text)
-    cleaned = [cleanse_and_tag(u) for u in urls]
-    return '\n'.join(cleaned)
+    for u in urls:
+        cleaned = cleanse_and_tag(u)
+        text = text.replace(u, cleaned)
+    return text
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    cleaned_urls = None
+    cleaned_text = None
     original_text = ''
     if request.method == 'POST':
         original_text = request.form['message']
-        cleaned_urls = extract_and_clean_urls(original_text)
-    return render_template_string(HTML_TEMPLATE, cleaned_urls=cleaned_urls, original_text=original_text)
+        cleaned_text = extract_and_replace_urls(original_text)
+    return render_template_string(HTML_TEMPLATE, cleaned_text=cleaned_text, original_text=original_text)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
