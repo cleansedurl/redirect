@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template_string
 import requests
 import os
+import re
 
 app = Flask(__name__)
 
@@ -100,13 +101,13 @@ HTML_TEMPLATE = """
     <form method="POST">
       <div class="button-group">
         <button type="button" class="btn btn-secondary" onclick="pasteFromClipboard()">📋 Paste</button>
-        <button type="submit" class="btn btn-primary">🔍 Check & Clean</button>
+        <button type="submit" class="btn btn-primary">🔍 Extract & Clean</button>
       </div>
-      <input type="text" name="url" id="urlInput" placeholder="Paste URL here..." required value="{{ original_url | default('') }}">
+      <textarea name="message" id="urlInput" rows="4" placeholder="Paste full message here..." required>{{ original_text | default('') }}</textarea>
     </form>
 
-    {% if final_url %}
-    <textarea id="result" rows="4" readonly>{{ final_url }}</textarea>
+    {% if cleaned_urls %}
+    <textarea id="result" rows="6" readonly>{{ cleaned_urls }}</textarea>
     <button class="btn btn-primary" onclick="copyToClipboard()">✅ Copy Result</button>
     <div id="copyMessage"></div>
     {% endif %}
@@ -154,7 +155,7 @@ def cleanse_and_tag(url_str):
             query.pop("affExtParam1", None)
             query.pop("affExtParam2", None)
             query.pop("affExtParam", None)
-            # query["affid"] = ["yourFlipkartTag"]  # Optional
+            # query["affid"] = ["yourFlipkartTag"]
 
         cleaned_query = urlencode(query, doseq=True)
         cleaned_url = urlunparse(parsed._replace(query=cleaned_query))
@@ -163,14 +164,19 @@ def cleanse_and_tag(url_str):
     except Exception as e:
         return f"Invalid URL! ({e})"
 
+def extract_and_clean_urls(text):
+    urls = re.findall(r'https?://\S+', text)
+    cleaned = [cleanse_and_tag(u) for u in urls]
+    return '\n'.join(cleaned)
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    final_url = None
-    original_url = ''
+    cleaned_urls = None
+    original_text = ''
     if request.method == 'POST':
-        original_url = request.form['url']
-        final_url = cleanse_and_tag(original_url)
-    return render_template_string(HTML_TEMPLATE, final_url=final_url, original_url=original_url)
+        original_text = request.form['message']
+        cleaned_urls = extract_and_clean_urls(original_text)
+    return render_template_string(HTML_TEMPLATE, cleaned_urls=cleaned_urls, original_text=original_text)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
