@@ -109,6 +109,7 @@ HTML_TEMPLATE = """
     {% if cleaned_text %}
     <textarea id=\"result\" rows=\"8\" readonly>{{ cleaned_text }}</textarea>
     <button class=\"btn btn-primary\" onclick=\"copyToClipboard()\">✅ Copy Result</button>
+    <button class=\"btn btn-primary\" onclick=\"shareOnWhatsApp()\">📤 Share on WhatsApp</button>
     <div id=\"copyMessage\"></div>
     {% endif %}
 
@@ -133,6 +134,13 @@ HTML_TEMPLATE = """
         messageBox.innerText = "✅ Copied to clipboard!";
         setTimeout(() => { messageBox.innerText = ""; }, 2000);
       });
+    }
+
+    function shareOnWhatsApp() {
+      const message = document.getElementById("result").value;
+      if (!message) return alert("No message to share!");
+      const url = "https://wa.me/?text=" + encodeURIComponent(message);
+      window.open(url, "_blank");
     }
   </script>
 </body>
@@ -173,9 +181,9 @@ def extract_and_replace_urls(text):
         text = text.replace(u, cleaned)
 
     cta = (
-        "\n\n🔥 *Grab it before it’s gone!* "
-        "🛒 Follow RoarDeals for daily deals!\n"
-        "👉 Join our WhatsApp Channel now: https://whatsapp.com/channel/your-channel-id"
+        "\n\n\ud83d\udd25 *Grab it before it’s gone!* "
+        "\ud83d\uded2 Follow RoarDeals for daily deals!\n"
+        "\ud83d\udc49 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
     )
 
     return text.strip() + cta
