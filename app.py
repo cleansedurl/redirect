@@ -2,8 +2,15 @@ from flask import Flask, request, render_template_string
 import requests
 import os
 import re
+from telethon.sync import TelegramClient
+from telethon.tl.functions.messages import GetHistoryRequest
 
 app = Flask(__name__)
+
+TELEGRAM_API_ID = int(os.environ.get("TG_API_ID"))
+TELEGRAM_API_HASH = os.environ.get("TG_API_HASH")
+TELEGRAM_CHANNEL = os.environ.get("TG_CHANNEL")
+
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -105,12 +112,23 @@ HTML_TEMPLATE = """
       </div>
       <textarea name=\"message\" id=\"urlInput\" rows=\"4\" placeholder=\"Paste full message here...\" required>{{ original_text | default('') }}</textarea>
     </form>
+    <form method=\"GET\" action=\"/fetch_telegram\">
+      <button type=\"submit\" class=\"btn btn-secondary\">📥 Fetch Amazon Deals from Telegram</button>
+    </form>
 
     {% if cleaned_text %}
     <textarea id=\"result\" rows=\"8\" readonly>{{ cleaned_text }}</textarea>
     <button class=\"btn btn-primary\" onclick=\"copyToClipboard()\">✅ Copy Result</button>
     <button class=\"btn btn-primary\" onclick=\"shareOnWhatsApp()\">📤 Share on WhatsApp</button>
     <div id=\"copyMessage\"></div>
+    {% endif %}
+
+    {% if telegram_msgs %}
+    <h3 style=\"margin-top:1.5em;\">📦 Latest Telegram Deals</h3>
+    {% for msg in telegram_msgs %}
+      <textarea rows=\"6\" readonly style=\"margin-bottom:1em;\">{{ msg }}</textarea>
+      <button class=\"btn btn-primary\" onclick=\"shareOnWhatsAppText(`{{ msg | safe }}`)">📤 Share This</button>
+    {% endfor %}
     {% endif %}
 
     <p style=\"margin-top:2em;text-align:center;font-size:0.95em;color:#555;\">🔥 Grab the best deals now! Don't miss out!<br>👉 Join our <strong>RoarDeals WhatsApp Channel</strong> for daily loot alerts! 🛍️📲</p>
@@ -140,6 +158,11 @@ HTML_TEMPLATE = """
       const message = document.getElementById("result").value;
       if (!message) return alert("No message to share!");
       const url = "https://wa.me/?text=" + encodeURIComponent(message);
+      window.open(url, "_blank");
+    }
+
+    function shareOnWhatsAppText(text) {
+      const url = "https://wa.me/?text=" + encodeURIComponent(text);
       window.open(url, "_blank");
     }
   </script>
@@ -173,16 +196,6 @@ def cleanse_and_tag(url_str):
     except Exception as e:
         return url_str  # return original if fails
 
-def enhance_text_cta(text):
-    enhancements = [
-        "🔥 Hurry! Limited stock available!",
-        "🛒 Deal ends soon – don’t miss out!",
-        "✅ Trusted seller + fast delivery!",
-        "💥 Best price online – grab it now!",
-    ]
-    from random import choice
-    return f"{text}\n\n{choice(enhancements)}"
-
 def extract_and_replace_urls(text):
     urls = re.findall(r'https?://\S+', text)
     for u in urls:
@@ -190,13 +203,33 @@ def extract_and_replace_urls(text):
         text = text.replace(u, cleaned)
 
     cta = (
-        "\n\n🔥 *Grab it before it’s gone!* "
-        "🛒 Follow RoarDeals for daily deals!\n"
-        "👉 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
+        "\n\n\ud83d\udd25 *Grab it before it’s gone!* "
+        "\ud83d\uded2 Follow RoarDeals for daily deals!\n"
+        "\ud83d\udc49 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
     )
 
-    enhanced = enhance_text_cta(text.strip())
-    return enhanced + cta
+    return text.strip() + cta
+
+def fetch_telegram_amazon_messages(limit=5):
+    client = TelegramClient('roardeals_session', TELEGRAM_API_ID, TELEGRAM_API_HASH)
+    amazon_msgs = []
+
+    with client:
+        entity = client.get_entity(TELEGRAM_CHANNEL)
+        history = client(GetHistoryRequest(
+            peer=entity,
+            limit=limit,
+            offset_date=None,
+            offset_id=0,
+            max_id=0,
+            min_id=0,
+            add_offset=0,
+            hash=0
+        ))
+        for message in history.messages:
+            if message.message and re.search(r'https?://(?:amzn\.to|www\.amazon\.\S+)', message.message):
+                amazon_msgs.append(message.message)
+    return amazon_msgs
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -206,6 +239,15 @@ def home():
         original_text = request.form['message']
         cleaned_text = extract_and_replace_urls(original_text)
     return render_template_string(HTML_TEMPLATE, cleaned_text=cleaned_text, original_text=original_text)
+
+@app.route('/fetch_telegram')
+def fetch_telegram():
+    try:
+        messages = fetch_telegram_amazon_messages(limit=5)
+        cleaned = [extract_and_replace_urls(m) for m in messages]
+        return render_template_string(HTML_TEMPLATE, telegram_msgs=cleaned)
+    except Exception as e:
+        return f"Error fetching messages: {str(e)}"
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
