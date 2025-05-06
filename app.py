@@ -173,6 +173,16 @@ def cleanse_and_tag(url_str):
     except Exception as e:
         return url_str  # return original if fails
 
+def enhance_text_cta(text):
+    enhancements = [
+        "🔥 Hurry! Limited stock available!",
+        "🛒 Deal ends soon – don’t miss out!",
+        "✅ Trusted seller + fast delivery!",
+        "💥 Best price online – grab it now!",
+    ]
+    from random import choice
+    return f"{text}\n\n{choice(enhancements)}"
+
 def extract_and_replace_urls(text):
     urls = re.findall(r'https?://\S+', text)
     for u in urls:
@@ -185,7 +195,8 @@ def extract_and_replace_urls(text):
         "👉 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
     )
 
-    return text.strip() + cta
+    enhanced = enhance_text_cta(text.strip())
+    return enhanced + cta
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
