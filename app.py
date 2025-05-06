@@ -2,6 +2,7 @@ from flask import Flask, request, render_template_string
 import requests
 import os
 import re
+import asyncio
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetHistoryRequest
 
@@ -203,33 +204,35 @@ def extract_and_replace_urls(text):
         text = text.replace(u, cleaned)
 
     cta = (
-        "\n\n\ud83d\udd25 *Grab it before it’s gone!* "
-        "\ud83d\uded2 Follow RoarDeals for daily deals!\n"
-        "\ud83d\udc49 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
+        "\n\n🔥 *Grab it before it’s gone!* "
+        "🛒 Follow RoarDeals for daily deals!\n"
+        "👉 Join our WhatsApp Channel now:  https://whatsapp.com/channel/0029VbAKok6BVJl77xRLF90s"
     )
 
     return text.strip() + cta
 
 def fetch_telegram_amazon_messages(limit=5):
-    client = TelegramClient('roardeals_session', TELEGRAM_API_ID, TELEGRAM_API_HASH)
-    amazon_msgs = []
+    async def fetch():
+        async with TelegramClient('roardeals_session', TELEGRAM_API_ID, TELEGRAM_API_HASH) as client:
+            entity = await client.get_entity(TELEGRAM_CHANNEL)
+            history = await client(GetHistoryRequest(
+                peer=entity,
+                limit=limit,
+                offset_date=None,
+                offset_id=0,
+                max_id=0,
+                min_id=0,
+                add_offset=0,
+                hash=0
+            ))
+            return [
+                msg.message for msg in history.messages
+                if msg.message and re.search(r'https?://(?:amzn\.to|www\.amazon\.\S+)', msg.message)
+            ]
 
-    with client:
-        entity = client.get_entity(TELEGRAM_CHANNEL)
-        history = client(GetHistoryRequest(
-            peer=entity,
-            limit=limit,
-            offset_date=None,
-            offset_id=0,
-            max_id=0,
-            min_id=0,
-            add_offset=0,
-            hash=0
-        ))
-        for message in history.messages:
-            if message.message and re.search(r'https?://(?:amzn\.to|www\.amazon\.\S+)', message.message):
-                amazon_msgs.append(message.message)
-    return amazon_msgs
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    return loop.run_until_complete(fetch())
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
