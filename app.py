@@ -182,7 +182,7 @@ def cleanse_and_tag(url_str):
             query.pop("tag", None)
             query.pop("ascsubtag", None)
             query.pop("ref", None)
-            query["tag"] = ["roardeals0c-21"]
+            query["tag"] = ["roardeals777-21"]
 
         if "flipkart." in parsed.netloc:
             query.pop("affid", None)
